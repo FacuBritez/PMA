@@ -46,6 +46,7 @@ public class FileWatcherLoader : MonoBehaviour
             new Vector2(0.5f, 0.5f));
 
         GameObject go = new GameObject(Path.GetFileName(path));
+        go.transform.position = new Vector3(Random.Range(-9, 9), Random.Range(-5, 5), 0);
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = sprite;
     }
