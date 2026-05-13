@@ -6,7 +6,7 @@ Shader "Custom/sacarBlanco"
         _Threshold ("Umbral de Blanco", Range(0, 1)) = 0.9
         _Softness ("Suavizado", Range(0, 0.5)) = 0.1
     }
-
+    
     SubShader
     {
         // Importante: Tag para permitir transparencia
