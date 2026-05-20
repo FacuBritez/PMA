@@ -1,4 +1,4 @@
-Shader "Custom/SpriteWave"
+Shader "Custom/SpriteWaveWithKeying"
 {
     Properties
     {
@@ -6,6 +6,10 @@ Shader "Custom/SpriteWave"
         _WaveSpeed ("Wave Speed", Float) = 2.0
         _WaveFreq ("Wave Frequency", Float) = 10.0
         _WaveAmp ("Wave Amplitude", Float) = 0.05
+        
+        // Nuevas propiedades para controlar el descarte de blancos/grises
+        _CutoffThreshold ("Cutoff Threshold", Range(0.0, 1.0)) = 0.8
+        _Feather ("Feather Smoothness", Range(0.001, 0.5)) = 0.05
     }
 
     SubShader
@@ -49,17 +53,16 @@ Shader "Custom/SpriteWave"
                 float _WaveSpeed;
                 float _WaveFreq;
                 float _WaveAmp;
+                float _CutoffThreshold;
+                float _Feather;
             CBUFFER_END
 
             Varyings vert(Attributes input)
             {
                 Varyings output;
-               
-                // Calculamos la ondulación basada en la posición X y el tiempo
-                // Usamos input.uv.x para que la cola se mueva más que la cabeza si fuera necesario
+                
+                // Algoritmo de deformación geométrica (idéntico al anterior)
                 float wave = sin(_Time.y * _WaveSpeed + (input.positionOS.x * _WaveFreq)) * _WaveAmp;
-               
-                // Aplicamos el desplazamiento al eje Y (u horizontal si el pez nada hacia arriba)
                 input.positionOS.y += wave;
 
                 output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
@@ -70,7 +73,22 @@ Shader "Custom/SpriteWave"
 
             half4 frag(Varyings input) : SV_Target
             {
+                // 1. Muestrear el color original de la textura
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                
+                // 2. Calcular la luminancia (brillo percibido por el ojo humano)
+                // Se usan los pesos estándar del espectro para los canales R, G y B
+                half luminance = dot(texColor.rgb, half3(0.2126, 0.7152, 0.0722));
+                
+                // 3. Crear una máscara suave usando smoothstep
+                // Si la luminancia es baja, devuelve 1 (mantiene el alfa original).
+                // A medida que se acerca al umbral blanco/gris, decae suavemente a 0.
+                half alphaMask = 1.0 - smoothstep(_CutoffThreshold - _Feather, _CutoffThreshold, luminance);
+                
+                // 4. Multiplicar el alfa del píxel por la máscara calculada
+                texColor.a *= alphaMask;
+                
+                // 5. Aplicar el color del componente SpriteRenderer
                 return texColor * input.color;
             }
             ENDHLSL
