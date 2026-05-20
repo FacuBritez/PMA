@@ -3,13 +3,13 @@ Shader "Custom/SpriteWaveWithKeying"
     Properties
     {
         [MainTexture] _MainTex ("Sprite Texture", 2D) = "white" {}
-        _WaveSpeed ("Wave Speed", Float) = 2.0
-        _WaveFreq ("Wave Frequency", Float) = 10.0
-        _WaveAmp ("Wave Amplitude", Float) = 0.05
+        _WaveSpeed ("Wave Speed", Float) = 6
+        _WaveFreq ("Wave Frequency", Float) = 0.4
+        _WaveAmp ("Wave Amplitude", Float) = 2.5
         
         // Nuevas propiedades para controlar el descarte de blancos/grises
-        _CutoffThreshold ("Cutoff Threshold", Range(0.0, 1.0)) = 0.8
-        _Feather ("Feather Smoothness", Range(0.001, 0.5)) = 0.05
+        _CutoffThreshold ("Cutoff Threshold", Range(0.0, 1.0)) = 0.459
+        _Feather ("Feather Smoothness", Range(0.001, 0.5)) = 0.169
     }
 
     SubShader
