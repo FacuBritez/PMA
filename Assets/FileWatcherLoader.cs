@@ -6,6 +6,7 @@ public class FileWatcherLoader : MonoBehaviour
     public string watchFolder = "Assets/WatchedImages";
     private FileSystemWatcher watcher;
     private string pendingImagePath;
+    public Shader fishShader;
 
     void Start()
     {
@@ -45,10 +46,19 @@ public class FileWatcherLoader : MonoBehaviour
             new Rect(0, 0, tex.width, tex.height),
             new Vector2(0.5f, 0.5f));
 
+
         GameObject go = new GameObject(Path.GetFileName(path));
         go.transform.position = new Vector3(Random.Range(-9, 9), Random.Range(-5, 5), 0);
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = sprite;
+
+        // añadimos el shader
+        // Creamos un material con el shader
+        Material mat = new Material(fishShader);
+        sr.material = mat;
+
+        Movement move = go.AddComponent<Movement>();
+        move.speed = Random.Range(1f, 4f);
     }
 
     void OnDestroy()
