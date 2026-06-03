@@ -10,6 +10,14 @@ public class FileWatcherLoader : MonoBehaviour
 
     void Start()
     {
+        // Si estás en el editor, usa una carpeta en la raíz del proyecto.
+        // Si es el juego exportado, creará la carpeta al lado del archivo .exe
+        if (!Application.isEditor)
+        {
+            watchFolder = Path.Combine(Path.GetDirectoryName(Application.dataPath), "WatchedImages");
+            Debug.Log("Juego exportado");
+        }
+
         if (!Directory.Exists(watchFolder))
             Directory.CreateDirectory(watchFolder);
 
