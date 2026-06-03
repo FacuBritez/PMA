@@ -16,6 +16,7 @@ public class FileWatcherLoader : MonoBehaviour
             Display.displays[i].Activate();
         }
 
+Application.runInBackground = true;
 
 
 

@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Custom_OptimizedGodrays
-  m_Shader: {fileID: 4800000, guid: 52e0be735653b4c458bca5e998df2b92, type: 3}
+  m_Name: WavePlanta
+  m_Shader: {fileID: 4800000, guid: 80ccb02d943e5d047beb77faf2524725, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -22,15 +22,18 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AnimSpeed: 1.5
-    - _AnimWidth: 0.336
-    - _Falloff: 5.35
-    - _Power: 2.35
-    m_Colors:
-    - _RayColor: {r: 0, g: 0.4, b: 0.8, a: 1}
-    - _SurfaceColor: {r: 2, g: 2, b: 2, a: 1}
+    - _CutoffThreshold: 1
+    - _Feather: 0.169
+    - _WaveAmp: 0.4
+    - _WaveFreq: -0.11
+    - _WaveSpeed: 1.06
+    m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1
