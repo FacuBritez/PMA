@@ -29,7 +29,7 @@ public class Movement : MonoBehaviour
 
         baseY = Random.Range(-4f, 4f);
         tiempoOffset = Random.Range(0f, Mathf.PI * 2); // fase aleatoria
-        transform.position = new Vector3(leftLimit, baseY, 0);
+        transform.position = new Vector3(leftLimit, baseY, transform.position.z);
         movingRight = true;
         sr.flipX = false;
     }

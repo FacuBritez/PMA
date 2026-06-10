@@ -67,7 +67,7 @@ Application.runInBackground = true;
 
 
         GameObject go = new GameObject(Path.GetFileName(path));
-        go.transform.position = new Vector3(Random.Range(-9, 9), Random.Range(-5, 5), 0);
+        go.transform.position = new Vector3(Random.Range(-9f, 9f), Random.Range(-5f, 5f), -3.5f);
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = sprite;
 
