@@ -29,43 +29,50 @@ public class Movement : MonoBehaviour
 
         baseY = Random.Range(-4f, 4f);
         tiempoOffset = Random.Range(0f, Mathf.PI * 2); // fase aleatoria
-        transform.position = new Vector3(leftLimit, baseY, 0);
+        transform.position = new Vector3(leftLimit, baseY, transform.position.z);
         movingRight = true;
         sr.flipX = false;
     }
 
     void Update()
+{
+    if (movingRight)
     {
-        // Movimiento horizontal
-        if (movingRight)
-        {
-            transform.Translate(Vector3.right * speed * Time.deltaTime);
-            if (transform.position.x > rightLimit)
-            {
-                movingRight = false;
-                sr.flipX = true;
-                ElegirNuevaAlturaBase(); // nueva altura al llegar al límite
-            }
-        }
-        else
-        {
-            transform.Translate(Vector3.left * speed * Time.deltaTime);
-            if (transform.position.x < leftLimit)
-            {
-                movingRight = true;
-                sr.flipX = false;
-                ElegirNuevaAlturaBase(); // nueva altura al llegar al límite
-            }
-        }
+        transform.Translate(Vector3.right * speed * Time.deltaTime);
 
-        // Balanceo (rotación)
-        float angulo = Mathf.Sin(Time.time * velocidadRotacion) * amplitudRotacion;
-        transform.rotation = Quaternion.Euler(0f, 0f, angulo);
-
-        // Movimiento vertical suave basado en baseY
-        float newY = baseY + Mathf.Sin(Time.time * velocidadVertical + tiempoOffset) * amplitudVertical;
-        transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+        if (transform.position.x > rightLimit)
+        {
+            movingRight = false;
+            Invertir();
+            ElegirNuevaAlturaBase();
+        }
     }
+    else
+    {
+        transform.Translate(Vector3.left * speed * Time.deltaTime);
+
+        if (transform.position.x < leftLimit)
+        {
+            movingRight = true;
+            Invertir();
+            ElegirNuevaAlturaBase();
+        }
+    }
+
+    // Rotación
+    float angulo = Mathf.Sin(Time.time * velocidadRotacion) * amplitudRotacion;
+    transform.rotation = Quaternion.Euler(0f, 0f, angulo);
+
+    // Movimiento vertical
+    float newY = baseY + Mathf.Sin(Time.time * velocidadVertical + tiempoOffset) * amplitudVertical;
+    transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+}
+    void Invertir()
+{
+    Vector3 scale = transform.localScale;
+    scale.x *= -1;
+    transform.localScale = scale;
+}
 
     void ElegirNuevaAlturaBase()
     {
