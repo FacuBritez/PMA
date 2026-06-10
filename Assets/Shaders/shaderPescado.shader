@@ -3,9 +3,9 @@ Shader "Custom/SpriteWaveWithKeying"
     Properties
     {
         [MainTexture] _MainTex ("Sprite Texture", 2D) = "white" {}
-        _WaveSpeed ("Wave Speed", Float) = 6
-        _WaveFreq ("Wave Frequency", Float) = 0.4
-        _WaveAmp ("Wave Amplitude", Float) = 2.5
+        _WaveSpeed ("Wave Speed", Float) = 4
+        _WaveFreq ("Wave Frequency", Float) = 0.5
+        _WaveAmp ("Wave Amplitude", Float) = 1
         
         // Nuevas propiedades para controlar el descarte de blancos/grises
         _CutoffThreshold ("Cutoff Threshold", Range(0.0, 1.0)) = 0.459
@@ -62,8 +62,8 @@ Shader "Custom/SpriteWaveWithKeying"
                 Varyings output;
                 
                 // Algoritmo de deformación geométrica (idéntico al anterior)
-                float wave = sin(_Time.y * _WaveSpeed + (input.positionOS.x * _WaveFreq)) * _WaveAmp;
-                input.positionOS.y += wave;
+                float wave = sin(_Time.z * _WaveSpeed + (input.positionOS.x * _WaveFreq)) * _WaveAmp;
+                input.positionOS.z += wave;
 
                 output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
                 output.uv = input.uv;
