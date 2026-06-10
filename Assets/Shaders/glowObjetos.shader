@@ -1,27 +1,21 @@
-Shader "Custom/SpriteGlowWithKeyingSimplified"
+Shader "Custom/SpriteGlowContourOptimized"
 {
     Properties
     {
         [MainTexture] _MainTex ("Sprite Texture", 2D) = "white" {}
         [HDR] _GlowColor("Glow Color (HDR)", Color) = (2, 2, 2, 1)
         
-        [Header(Descarte de Blancos y Grises)]
-        _CutoffThreshold ("Cutoff Threshold", Range(0.0, 1.0)) = 0.459
-        _Feather ("Feather Smoothness", Range(0.001, 0.5)) = 0.169
+        [Header(Umbral de la Silueta Alfa)]
+        _AlphaThreshold ("Alpha Threshold", Range(0.0, 0.9)) = 0.9
 
-        [Header(Configuracion del Glow)]
-        _MaxGlowWidth("Radio Maximo del Brillo", Range(0.0, 0.2)) = 0.05
-        _GlowThreshold("Umbral de Borde del Glow", Range(0.0, 1.0)) = 0.1
+        [Header(Configuracion del Glow de Contorno)]
+        _MaxGlowWidth("Radio Maximo del Brillo", Range(0.0, 0.05)) = 0.0233
         
-        [Header(Control de Tiempos Simplificado)]
-        _FadeInDuration("1. Fade In (Antes de encender)", Range(0.0, 5.0)) = 0.5
-        _GlowOnDuration("2. Glow ON (Brillo Maximo Fijo)", Range(0.0, 10.0)) = 2.0
-        _FadeOutDuration("3. Fade Out (Despues de encender)", Range(0.0, 5.0)) = 0.5
-        _GlowOffDuration("4. Glow OFF (Tiempo Apagado)", Range(0.0, 20.0)) = 4.0
-
-        [Header(Suavizado de Curvas (Slowness))]
-        _FadeInSlowdown("Ralentizar Encendido (Exponente)", Range(1.0, 5.0)) = 2.0
-        _FadeOutSlowdown("Ralentizar Apagado (Exponente)", Range(1.0, 5.0)) = 2.0
+        [Header(Control de Tiempos)]
+        _FadeInDuration("1. Fade In", Range(0.0, 5.0)) = 2.21
+        _GlowOnDuration("2. Glow ON", Range(0.0, 10.0)) = 3.72
+        _FadeOutDuration("3. Fade Out", Range(0.0, 5.0)) = 2.24
+        _GlowOffDuration("4. Glow OFF", Range(0.0, 20.0)) = 4
     }
 
     SubShader
@@ -62,17 +56,13 @@ Shader "Custom/SpriteGlowWithKeyingSimplified"
             SAMPLER(sampler_MainTex);
 
             CBUFFER_START(UnityPerMaterial)
-                float _CutoffThreshold;
-                float _Feather;
+                float _AlphaThreshold;
                 float4 _GlowColor;
                 float _MaxGlowWidth;
-                float _GlowThreshold;
                 float _FadeInDuration;
                 float _GlowOnDuration;
                 float _FadeOutDuration;
                 float _GlowOffDuration;
-                float _FadeInSlowdown;
-                float _FadeOutSlowdown;
             CBUFFER_END
 
             Varyings vert(Attributes input)
@@ -84,85 +74,47 @@ Shader "Custom/SpriteGlowWithKeyingSimplified"
                 return output;
             }
 
-            half GetObjectSilhouette(float2 uvCoords)
+            // Muestreo ultra-rápido de un punto alfa
+            half SampleAlpha(float2 uv)
             {
-                half4 tex = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uvCoords);
-                half luma = dot(tex.rgb, half3(0.2126, 0.7152, 0.0722));
-                return 1.0 - smoothstep(_CutoffThreshold - _Feather, _CutoffThreshold, luma);
+                return SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).a > _AlphaThreshold ? 1.0 : 0.0;
             }
 
             half4 frag(Varyings input) : SV_Target
             {
-                half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
-                half currentSilhouette = GetObjectSilhouette(input.uv);
-                texColor.a = currentSilhouette;
-
-                // 1. CALCULO AUTOMÁTICO DEL CICLO TOTAL
-                // La suma de todas tus variables define la duración completa del bucle
+                // 1. OBTENER EL TIEMPO EN LÍNEA DE TIEMPO SIN CONDICIONALES "IF"
                 float totalCycleTime = _FadeInDuration + _GlowOnDuration + _FadeOutDuration + _GlowOffDuration;
-                
-                // Reloj por módulo protegido
                 float currentTime = fmod(_Time.y, max(0.1, totalCycleTime));
 
-                // 2. HITOS SECUENCIALES DE LA LÍNEA DE TIEMPO
-                float endFadeIn = _FadeInDuration;
-                float endGlowOn = endFadeIn + _GlowOnDuration;
-                float endFadeOut = endGlowOn + _FadeOutDuration;
+                // Cálculo matemático de la máscara de tiempo (reemplaza los IFS para ejecución paralela en GPU)
+                float step1 = step(currentTime, _FadeInDuration);
+                float step2 = step(currentTime, _FadeInDuration + _GlowOnDuration);
+                float step3 = step(currentTime, _FadeInDuration + _GlowOnDuration + _FadeOutDuration);
 
-                float timeMask = 0.0;
+                float fadeInProg = saturate(currentTime / max(0.01, _FadeInDuration));
+                float fadeOutProg = saturate((currentTime - (_FadeInDuration + _GlowOnDuration)) / max(0.01, _FadeOutDuration));
 
-                // Fase 1: FADE IN (Antes del Glow ON)
-                if (currentTime < endFadeIn)
-                {
-                    float progress = saturate(currentTime / max(0.01, _FadeInDuration));
-                    timeMask = pow(progress, _FadeInSlowdown);
-                }
-                // Fase 2: GLOW ON (Brillo al Máximo)
-                else if (currentTime >= endFadeIn && currentTime < endGlowOn)
-                {
-                    timeMask = 1.0;
-                }
-                // Fase 3: FADE OUT (Después del Glow ON)
-                else if (currentTime >= endGlowOn && currentTime < endFadeOut)
-                {
-                    float progress = saturate((currentTime - endGlowOn) / max(0.01, _FadeOutDuration));
-                    timeMask = 1.0 - pow(progress, _FadeOutSlowdown);
-                }
-                // Fase 4: GLOW OFF (Inactividad/Apagado total)
-                else
-                {
-                    timeMask = 0.0;
-                }
+                float timeMask = step1 * (fadeInProg * fadeInProg) +
+                                 (1.0 - step1) * step2 * 1.0 +
+                                 (1.0 - step2) * step3 * (1.0 - (fadeOutProg * fadeOutProg));
 
-                // 3. MUESTREO RADIAL DE 8 DIRECCIONES
+                // 2. MUESTREO SIMPLIFICADO DE CONTORNO COMPLETO (Ahorra un 50% de muestras de textura)
                 float currentWidth = _MaxGlowWidth * timeMask;
+                half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                half currentSilhouette = texColor.a > _AlphaThreshold ? 1.0 : 0.0;
 
-                float2 dirUp    = float2(0.0, 1.0) * currentWidth;
-                float2 dirDown  = float2(0.0, -1.0) * currentWidth;
-                float2 dirRight = float2(1.0, 0.0) * currentWidth;
-                float2 dirLeft  = float2(-1.0, 0.0) * currentWidth;
+                // Muestreo en cruz optimizado (suficiente para siluetas completas en texturas estándar)
+                half outline = 0.0;
+                outline += SampleAlpha(input.uv + float2(currentWidth, 0));
+                outline += SampleAlpha(input.uv - float2(currentWidth, 0));
+                outline += SampleAlpha(input.uv + float2(0, currentWidth));
+                outline += SampleAlpha(input.uv - float2(0, currentWidth));
                 
-                float2 dirUR    = float2(0.7071, 0.7071) * currentWidth;
-                float2 dirUL    = float2(-0.7071, 0.7071) * currentWidth;
-                float2 dirDR    = float2(0.7071, -0.7071) * currentWidth;
-                float2 dirDL    = float2(-0.7071, -0.7071) * currentWidth;
+                // Convertimos el acumulado en una máscara sólida de contorno exterior
+                half glowMask = saturate(outline) - currentSilhouette;
 
-                half a1 = GetObjectSilhouette(input.uv + dirUp);
-                half a2 = GetObjectSilhouette(input.uv + dirDown);
-                half a3 = GetObjectSilhouette(input.uv + dirRight);
-                half a4 = GetObjectSilhouette(input.uv + dirLeft);
-                half a5 = GetObjectSilhouette(input.uv + dirUR);
-                half a6 = GetObjectSilhouette(input.uv + dirUL);
-                half a7 = GetObjectSilhouette(input.uv + dirDR);
-                half a8 = GetObjectSilhouette(input.uv + dirDL);
-
-                half glowMask = (a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8) * 0.125;
-                glowMask = saturate(glowMask - currentSilhouette);
-                glowMask = smoothstep(_GlowThreshold, 1.0, glowMask);
-
-                // 4. MEZCLA FINAL
-                half3 dynamicGlowColor = _GlowColor.rgb * timeMask;
-                half3 finalRGB = texColor.rgb + (dynamicGlowColor * glowMask);
+                // 3. MEZCLA FINAL EFICIENTE
+                half3 finalRGB = texColor.rgb + (_GlowColor.rgb * glowMask * timeMask);
                 half finalAlpha = saturate(texColor.a + (glowMask * timeMask));
 
                 return half4(finalRGB, finalAlpha) * input.color;
