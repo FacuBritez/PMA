@@ -62,7 +62,7 @@ Shader "Custom/SpriteWaveWithKeying"
                 Varyings output;
                 
                 // Algoritmo de deformación geométrica (idéntico al anterior)
-                float wave = sin(_Time.z * _WaveSpeed + (input.positionOS.x * _WaveFreq)) * _WaveAmp;
+                float wave = sin(_Time.x * _WaveSpeed + (input.positionOS.y * _WaveFreq)) * _WaveAmp;
                 input.positionOS.z += wave;
 
                 output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
