@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Custom_SpriteGlowWithKeyingSimplified
+  m_Name: Glow 1-02
   m_Shader: {fileID: 4800000, guid: 0057706a7c715b549b726ff9eff088d0, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -29,17 +29,18 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaThreshold: 0.9
     - _CutoffThreshold: 0.459
     - _FadeInDuration: 0.5
     - _FadeInSlowdown: 2
     - _FadeOutDuration: 0.5
     - _FadeOutSlowdown: 2
     - _Feather: 0.169
-    - _GlowOffDuration: 4
-    - _GlowOnDuration: 2
+    - _GlowOffDuration: 4.4
+    - _GlowOnDuration: 4.19
     - _GlowThreshold: 0.1
     - _MaxGlowWidth: 0.05
     m_Colors:
-    - _GlowColor: {r: 2, g: 2, b: 2, a: 1}
+    - _GlowColor: {r: 1.9916005, g: 5.453567, b: 10.280967, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
