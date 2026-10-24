@@ -8,11 +8,11 @@ public class FileWatcherLoader : MonoBehaviour
     public Shader fishShader;
     void Start()
     {
-        Debug.Log("pantallas detectadas " + Display.displays.Length);
-        for (int i = 1; i < Display.displays.Length; i++)
-        {
-            Display.displays[i].Activate();
-        }
+        //Debug.Log("pantallas detectadas " + Display.displays.Length);
+        //for (int i = 1; i < Display.displays.Length; i++)
+        //{
+        //    Display.displays[i].Activate();
+        //}
         Application.runInBackground = true;
         if (!Application.isEditor)
         {
