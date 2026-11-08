@@ -8,6 +8,18 @@ public class FileWatcherLoader : MonoBehaviour
     private string pendingImagePath;
     public Shader fishShader;
 
+    [Header("Spawn Settings")]
+    [Tooltip("Rango horizontal (X) para el spawn aleatorio de peces.")]
+    public Vector2 spawnRangeX = new Vector2(-9f, 9f);
+    [Tooltip("Rango vertical (Y) para el spawn aleatorio de peces.")]
+    public Vector2 spawnRangeY = new Vector2(-5f, 5f);
+
+    [Header("Fish Movement Bounds")]
+    [Tooltip("Límite horizontal antes de que el pez pegue la vuelta.")]
+    public float limitePantalla = 20f;
+    [Tooltip("Rango vertical para la oscilación del pez.")]
+    public float limiteVertical = 3f;
+
     void Start()
     {
         Debug.Log("pantallas detectadas " + Display.displays.Length);
@@ -16,10 +28,7 @@ public class FileWatcherLoader : MonoBehaviour
             Display.displays[i].Activate();
         }
 
-Application.runInBackground = true;
-
-
-
+        Application.runInBackground = true;
 
         // Si estás en el editor, usa una carpeta en la raíz del proyecto.
         // Si es el juego exportado, creará la carpeta al lado del archivo .exe
@@ -65,18 +74,28 @@ Application.runInBackground = true;
             new Rect(0, 0, tex.width, tex.height),
             new Vector2(0.5f, 0.5f));
 
-
         GameObject go = new GameObject(Path.GetFileName(path));
-        go.transform.position = new Vector3(Random.Range(-9, 9), Random.Range(-5, 5), 0);
+        float spawnX = Random.Range(spawnRangeX.x, spawnRangeX.y);
+        float spawnY = Random.Range(spawnRangeY.x, spawnRangeY.y);
+        go.transform.position = new Vector3(spawnX, spawnY, 0);
+
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = sprite;
 
-        // añadimos el shader
-        // Creamos un material con el shader
-        Material mat = new Material(fishShader);
-        sr.material = mat;
+        // añadimos el shader si está asignado
+        if (fishShader != null)
+        {
+            Material mat = new Material(fishShader);
+            sr.material = mat;
+        }
+        else
+        {
+            Debug.LogWarning("FileWatcherLoader: fishShader no está asignado en el Inspector.");
+        }
 
         Movement move = go.AddComponent<Movement>();
+        move.limitePantalla = limitePantalla;
+        move.limiteVertical = limiteVertical;
         move.speed = Random.Range(1f, 4f);
     }
 

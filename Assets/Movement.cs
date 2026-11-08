@@ -1,4 +1,5 @@
 using UnityEngine;
+
 public class Movement : MonoBehaviour
 {
     public float speed = 2f;
@@ -27,11 +28,23 @@ public class Movement : MonoBehaviour
         rightLimit = limitePantalla;
         sr = GetComponent<SpriteRenderer>();
 
-        baseY = Random.Range(-4f, 4f);
+        // Si el objeto ya tiene una posición asignada al instanciarse (ej. desde FileWatcherLoader),
+        // respetamos esa posición inicial y elegimos una dirección aleatoria de nado.
+        if (transform.position != Vector3.zero)
+        {
+            baseY = transform.position.y;
+            movingRight = Random.value > 0.5f;
+            sr.flipX = !movingRight;
+        }
+        else
+        {
+            baseY = Random.Range(-limiteVertical, limiteVertical);
+            transform.position = new Vector3(leftLimit, baseY, 0);
+            movingRight = true;
+            sr.flipX = false;
+        }
+
         tiempoOffset = Random.Range(0f, Mathf.PI * 2); // fase aleatoria
-        transform.position = new Vector3(leftLimit, baseY, 0);
-        movingRight = true;
-        sr.flipX = false;
     }
 
     void Update()
