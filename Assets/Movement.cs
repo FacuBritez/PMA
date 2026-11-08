@@ -3,18 +3,23 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     public float speed = 2f;
+
     [Header("Rotacion opciones")]
     public float amplitudRotacion = 10f;
     public float velocidadRotacion = 5f;
     private bool movingRight = true;
-    private SpriteRenderer sr;
+
     [Header("Limites pantalla")]
     public float limitePantalla = 20f;
     private float leftLimit;
     private float rightLimit;
 
-    // Para el movimiento vertical suave
-    private float targetY;
+    [Header("Centro del plano")]
+    public Vector2 centro = Vector2.zero;
+
+    [Header("Direccion inicial (1 = derecha, -1 = izquierda)")]
+    public int direccionInicial = 1;
+
     [Header("Movimiento vertical")]
     public float amplitudVertical = 0.5f;
     public float velocidadVertical = 1f;
@@ -22,67 +27,73 @@ public class Movement : MonoBehaviour
     private float tiempoOffset;
     public float limiteVertical = 3f;
 
+    // Guardamos el tamaño absoluto para no perderlo al flipear
+    private float scaleAbsX;
+    private float scaleAbsY;
+
     void Start()
     {
-        leftLimit = -limitePantalla;
-        rightLimit = limitePantalla;
-        sr = GetComponent<SpriteRenderer>();
+        leftLimit  = centro.x - limitePantalla;
+        rightLimit = centro.x + limitePantalla;
 
-        // Si el objeto ya tiene una posición asignada al instanciarse (ej. desde FileWatcherLoader),
-        // respetamos esa posición inicial y elegimos una dirección aleatoria de nado.
-        if (transform.position != Vector3.zero)
-        {
-            baseY = transform.position.y;
-            movingRight = Random.value > 0.5f;
-            sr.flipX = !movingRight;
-        }
-        else
-        {
-            baseY = Random.Range(-limiteVertical, limiteVertical);
-            transform.position = new Vector3(leftLimit, baseY, 0);
-            movingRight = true;
-            sr.flipX = false;
-        }
+        // El loader ya seteó localScale con el signo de la dirección inicial.
+        // Guardamos los valores absolutos.
+        scaleAbsX = Mathf.Abs(transform.localScale.x);
+        scaleAbsY = Mathf.Abs(transform.localScale.y);
 
-        tiempoOffset = Random.Range(0f, Mathf.PI * 2); // fase aleatoria
+        movingRight = direccionInicial >= 0;
+        ApplyFlip();
+
+        float rangoY = Mathf.Max(0f, limiteVertical - amplitudVertical);
+        baseY = Mathf.Clamp(transform.position.y, centro.y - rangoY, centro.y + rangoY);
+
+        tiempoOffset = Random.Range(0f, Mathf.PI * 2f);
     }
 
     void Update()
     {
-        // Movimiento horizontal
         if (movingRight)
         {
-            transform.Translate(Vector3.right * speed * Time.deltaTime);
+            transform.Translate(Vector3.right * speed * Time.deltaTime, Space.World);
             if (transform.position.x > rightLimit)
             {
                 movingRight = false;
-                sr.flipX = true;
-                ElegirNuevaAlturaBase(); // nueva altura al llegar al límite
+                ApplyFlip();
+                ElegirNuevaAlturaBase();
             }
         }
         else
         {
-            transform.Translate(Vector3.left * speed * Time.deltaTime);
+            transform.Translate(Vector3.left * speed * Time.deltaTime, Space.World);
             if (transform.position.x < leftLimit)
             {
                 movingRight = true;
-                sr.flipX = false;
-                ElegirNuevaAlturaBase(); // nueva altura al llegar al límite
+                ApplyFlip();
+                ElegirNuevaAlturaBase();
             }
         }
 
-        // Balanceo (rotación)
         float angulo = Mathf.Sin(Time.time * velocidadRotacion) * amplitudRotacion;
         transform.rotation = Quaternion.Euler(0f, 0f, angulo);
 
-        // Movimiento vertical suave basado en baseY
         float newY = baseY + Mathf.Sin(Time.time * velocidadVertical + tiempoOffset) * amplitudVertical;
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
     }
 
+    /// <summary>
+    /// Flip por escala. movingRight=true → escala X positiva (sprite mira a la derecha).
+    /// movingRight=false → escala X negativa (sprite mira a la izquierda).
+    /// </summary>
+    void ApplyFlip()
+    {
+        float signX = movingRight ? -1f : 1f;
+        transform.localScale = new Vector3(scaleAbsX * signX, scaleAbsY, 1f);
+    }
+
     void ElegirNuevaAlturaBase()
     {
-        baseY = Random.Range(-limiteVertical, limiteVertical);
+        float rangoY = Mathf.Max(0f, limiteVertical - amplitudVertical);
+        baseY = centro.y + Random.Range(-rangoY, rangoY);
         tiempoOffset = Random.Range(0f, Mathf.PI * 2f);
     }
 }
