@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.IO;
-
 public class FileWatcherLoader : MonoBehaviour
 {
     public string watchFolder = "Assets/WatchedImages";
@@ -37,24 +36,20 @@ public class FileWatcherLoader : MonoBehaviour
             watchFolder = Path.Combine(Path.GetDirectoryName(Application.dataPath), "WatchedImages");
             Debug.Log("Juego exportado");
         }
-
         if (!Directory.Exists(watchFolder))
             Directory.CreateDirectory(watchFolder);
-
         watcher = new FileSystemWatcher(watchFolder);
         watcher.Filter = "*.*";
         watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
         watcher.Created += OnImageAdded;
         watcher.EnableRaisingEvents = true;
     }
-
     void OnImageAdded(object sender, FileSystemEventArgs e)
     {
         string ext = Path.GetExtension(e.FullPath).ToLower();
         if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
             pendingImagePath = e.FullPath;
     }
-
     void Update()
     {
         if (pendingImagePath != null)
@@ -63,6 +58,11 @@ public class FileWatcherLoader : MonoBehaviour
             pendingImagePath = null;
         }
     }
+void LoadImage(string path)
+{
+    byte[] bytes = File.ReadAllBytes(path);
+    Texture2D tex = new Texture2D(2, 2);
+    tex.LoadImage(bytes);
 
     void LoadImage(string path)
     {
@@ -99,6 +99,9 @@ public class FileWatcherLoader : MonoBehaviour
         move.speed = Random.Range(1f, 4f);
     }
 
+    Movement move = go.AddComponent<Movement>();
+    move.speed = Random.Range(1f, 4f);
+}
     void OnDestroy()
     {
         watcher?.Dispose();

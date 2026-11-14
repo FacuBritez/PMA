@@ -74,7 +74,8 @@ public class Movement : MonoBehaviour
         }
 
         float angulo = Mathf.Sin(Time.time * velocidadRotacion) * amplitudRotacion;
-        transform.rotation = Quaternion.Euler(0f, 0f, angulo);
+        Quaternion rotBalanceo = Quaternion.Euler(0f, 0f, angulo);
+        transform.rotation = rotBaseFija * rotBalanceo;
 
         float newY = baseY + Mathf.Sin(Time.time * velocidadVertical + tiempoOffset) * amplitudVertical;
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
