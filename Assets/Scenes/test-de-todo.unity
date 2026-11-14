@@ -5378,6 +5378,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FileWatcherLoader
   watchFolder: Assets/WatchedImages
   fishShader: {fileID: 4800000, guid: 80ccb02d943e5d047beb77faf2524725, type: 3}
+  spawnRangeX: {x: -9, y: 9}
+  spawnRangeY: {x: -5, y: 5}
+  limitePantalla: 20
+  limiteVertical: 3
 --- !u!4 &329979418
 Transform:
   m_ObjectHideFlags: 0

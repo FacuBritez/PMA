@@ -6,14 +6,31 @@ public class FileWatcherLoader : MonoBehaviour
     private FileSystemWatcher watcher;
     private string pendingImagePath;
     public Shader fishShader;
+
+    [Header("Spawn Settings")]
+    [Tooltip("Rango horizontal (X) para el spawn aleatorio de peces.")]
+    public Vector2 spawnRangeX = new Vector2(-9f, 9f);
+    [Tooltip("Rango vertical (Y) para el spawn aleatorio de peces.")]
+    public Vector2 spawnRangeY = new Vector2(-5f, 5f);
+
+    [Header("Fish Movement Bounds")]
+    [Tooltip("Límite horizontal antes de que el pez pegue la vuelta.")]
+    public float limitePantalla = 20f;
+    [Tooltip("Rango vertical para la oscilación del pez.")]
+    public float limiteVertical = 3f;
+
     void Start()
     {
-        //Debug.Log("pantallas detectadas " + Display.displays.Length);
-        //for (int i = 1; i < Display.displays.Length; i++)
-        //{
-        //    Display.displays[i].Activate();
-        //}
+        Debug.Log("pantallas detectadas " + Display.displays.Length);
+        for (int i = 1; i < Display.displays.Length; i++)
+        {
+            Display.displays[i].Activate();
+        }
+
         Application.runInBackground = true;
+
+        // Si estás en el editor, usa una carpeta en la raíz del proyecto.
+        // Si es el juego exportado, creará la carpeta al lado del archivo .exe
         if (!Application.isEditor)
         {
             watchFolder = Path.Combine(Path.GetDirectoryName(Application.dataPath), "WatchedImages");
@@ -47,29 +64,39 @@ void LoadImage(string path)
     Texture2D tex = new Texture2D(2, 2);
     tex.LoadImage(bytes);
 
-    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Plane);
-    go.name = Path.GetFileName(path);
-    go.transform.position = new Vector3(Random.Range(-9f, 9f), Random.Range(-5f, 5f), -3.5f);
-    go.transform.rotation = Quaternion.Euler(-90f, 0f, 90f);
-
-    Material mat = new Material(fishShader);
-    mat.mainTexture = tex;
-    MeshRenderer mr = go.GetComponent<MeshRenderer>();
-    mr.material = mat;
-
-    // Normalizar tamaño según el ancho/alto deseado en unidades de mundo
-    float targetSize = 0.3f; // tamaño deseado (ajustalo a tu escala de juego)
-    float aspect = (float)tex.width / tex.height;
-
-    if (aspect >= 1f)
+    void LoadImage(string path)
     {
-        // imagen más ancha que alta
-        go.transform.localScale = new Vector3(targetSize, 1f, targetSize / aspect);
-    }
-    else
-    {
-        // imagen más alta que ancha
-        go.transform.localScale = new Vector3(targetSize * aspect, 1f, targetSize);
+        byte[] bytes = File.ReadAllBytes(path);
+        Texture2D tex = new Texture2D(2, 2);
+        tex.LoadImage(bytes);
+
+        Sprite sprite = Sprite.Create(tex,
+            new Rect(0, 0, tex.width, tex.height),
+            new Vector2(0.5f, 0.5f));
+
+        GameObject go = new GameObject(Path.GetFileName(path));
+        float spawnX = Random.Range(spawnRangeX.x, spawnRangeX.y);
+        float spawnY = Random.Range(spawnRangeY.x, spawnRangeY.y);
+        go.transform.position = new Vector3(spawnX, spawnY, 0);
+
+        SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = sprite;
+
+        // añadimos el shader si está asignado
+        if (fishShader != null)
+        {
+            Material mat = new Material(fishShader);
+            sr.material = mat;
+        }
+        else
+        {
+            Debug.LogWarning("FileWatcherLoader: fishShader no está asignado en el Inspector.");
+        }
+
+        Movement move = go.AddComponent<Movement>();
+        move.limitePantalla = limitePantalla;
+        move.limiteVertical = limiteVertical;
+        move.speed = Random.Range(1f, 4f);
     }
 
     Movement move = go.AddComponent<Movement>();
